@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Cw5.Models;
 using Cw5.DAL;
 using System.Data.SqlClient;
+using Cw5.Services;
 
 namespace Cw5.Controllers
 {
@@ -14,11 +15,11 @@ namespace Cw5.Controllers
     public class StudentsController : ControllerBase
     {
 
-        private SqlConnection client;
+        private IStudentDbService _service;
 
-        public StudentsController()
+        public StudentsController(IStudentDbService service)
         {
-            client =  new SqlConnection("Data Source=db-mssql.pjwstk.edu.pl;Initial Catalog=s16870;Integrated Security=True");
+            _service = service;
         }
 
         public string GetStudent()
@@ -29,58 +30,28 @@ namespace Cw5.Controllers
         [HttpGet("{id}")]
         public IActionResult GetStudent(string id)
         {
-            IActionResult res;
-            var st = new Student();
-            var com = new SqlCommand();
-            com.Connection = client;
-            com.CommandText = "SELECT * FROM StudentAPBD s LEFT JOIN ENROLLMENT e ON s.IdEnrollment = e.IdEnrollment LEFT JOIN STUDIES st on e.IdStudy = st.IdStudy WHERE IndexNumber LIKE @id";
-            com.Parameters.AddWithValue("id", id);
-            client.Open();
-            var dr = com.ExecuteReader();
-            if (dr.HasRows) { 
-                while (dr.Read())
-                {
-                    st.FirstName = dr["FirstName"].ToString();
-                    st.LastName = dr["LastName"].ToString();
-                    st.IndexNumber = dr["IndexNumber"].ToString();
-                    st.BirthDate = Convert.ToDateTime(dr["BirthDate"].ToString());
-                    st.Studies = dr["Name"].ToString();
-                    st.Semester = Convert.ToInt32(dr["Semester"].ToString());
-
-                }
-                res = Ok(st);
-            }else
+            Student resp = _service.GetStudent(id);
+            if(resp != null)
             {
-                res = NotFound("Nie znaleziono studenta");
+                return Ok(resp);
             }
-            com.Dispose();
-            client.Dispose();
-            return res;
+            else
+            {
+                return NotFound("Nie znaleziono studenta");
+            }
         }
         [HttpGet]
         public IActionResult GetStudents()
         {
-            var list = new List<Student>();
-            var com = new SqlCommand();
-            com.Connection = client;
-            com.CommandText = "SELECT * FROM StudentAPBD s LEFT JOIN ENROLLMENT e ON s.IdEnrollment = e.IdEnrollment LEFT JOIN STUDIES st on e.IdStudy = st.IdStudy";
-            client.Open();
-            var dr = com.ExecuteReader();
-            while (dr.Read())
+            var resp =_service.GetStudents();
+            if(resp != null)
             {
-                var st = new Student();
-                st.FirstName = dr["FirstName"].ToString();
-                st.LastName = dr["LastName"].ToString();
-                st.IndexNumber = dr["IndexNumber"].ToString();
-                st.BirthDate = Convert.ToDateTime(dr["BirthDate"].ToString());
-                st.Studies = dr["Name"].ToString();
-                st.Semester = Convert.ToInt32(dr["Semester"].ToString());
-
-                list.Add(st);
+                return Ok(resp);
             }
-            com.Dispose();
-            client.Dispose();
-            return Ok(list);
+            else
+            {
+                return NotFound("Brak studentów");
+            }
         }
         [HttpPost]
         public IActionResult CreateStudent(Student student)

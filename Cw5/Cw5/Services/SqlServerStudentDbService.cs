@@ -1,5 +1,6 @@
 ﻿using Cw5.DTO.Requests;
 using Cw5.DTO.Responses;
+using Cw5.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -106,6 +107,70 @@ namespace Cw5.Services
                 {
                     return null;
                 }
+            }
+        }
+        public Student GetStudent(String id)
+        {
+
+            using (var con = new SqlConnection("Data Source=db-mssql.pjwstk.edu.pl;Initial Catalog=s16870;Integrated Security=True"))
+            using (var com = new SqlCommand())
+            {
+                var st = new Student();
+                com.Connection = con;
+                con.Open();
+                com.CommandText = "SELECT * FROM StudentAPBD s LEFT JOIN ENROLLMENT e ON s.IdEnrollment = e.IdEnrollment LEFT JOIN STUDIES st on e.IdStudy = st.IdStudy WHERE IndexNumber LIKE @id";
+                com.Parameters.AddWithValue("id", id);
+                var dr = com.ExecuteReader();
+                if (dr.Read())
+                {
+                    return new Student
+                    {
+                        FirstName = dr["FirstName"].ToString(),
+                        LastName = dr["LastName"].ToString(),
+                        IndexNumber = dr["IndexNumber"].ToString(),
+                        BirthDate = Convert.ToDateTime(dr["BirthDate"].ToString()),
+                        Studies = dr["Name"].ToString(),
+                        Semester = Convert.ToInt32(dr["Semester"].ToString())
+                    };
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+        public IEnumerable<Student> GetStudents()
+        {
+
+            using (var con = new SqlConnection("Data Source=db-mssql.pjwstk.edu.pl;Initial Catalog=s16870;Integrated Security=True"))
+            using (var com = new SqlCommand())
+            {
+                var list = new List<Student>();
+                com.Connection = con;
+                con.Open();
+                com.CommandText = "SELECT * FROM StudentAPBD s LEFT JOIN ENROLLMENT e ON s.IdEnrollment = e.IdEnrollment LEFT JOIN STUDIES st on e.IdStudy = st.IdStudy";
+                var dr = com.ExecuteReader();
+                if (dr.HasRows)
+                {
+                    while (dr.Read())
+                    {
+                        list.Add(new Student
+                        {
+                            FirstName = dr["FirstName"].ToString(),
+                            LastName = dr["LastName"].ToString(),
+                            IndexNumber = dr["IndexNumber"].ToString(),
+                            BirthDate = Convert.ToDateTime(dr["BirthDate"].ToString()),
+                            Studies = dr["Name"].ToString(),
+                            Semester = Convert.ToInt32(dr["Semester"].ToString())
+                        });
+                    }
+                    return list;
+                }
+                else
+                {
+                    return null;
+                }
+                
             }
         }
     }
