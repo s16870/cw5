@@ -21,7 +21,7 @@ BEGIN
             RETURN;
         END
 
-    DECLARE @IdEnrollmentPromotion INT = (SELECT TOP 1 IdEnrollment FROM Enrollment WHERE Semester = (@Semester + 1));
+    DECLARE @IdEnrollmentPromotion INT = (SELECT TOP 1 IdEnrollment FROM Enrollment WHERE Semester = (@Semester + 1) AND IdStudy = @IdStudies);
     IF @IdEnrollmentPromotion IS NULL
         BEGIN
 			DECLARE @MaxIdEnrollment INT = (SELECT MAX(IdEnrollment) FROM Enrollment) + 1;
